@@ -65,14 +65,27 @@ export default function ShopifyDiagnostics() {
           const prodResponse = await fetch('/api/products?limit=10');
           const prodData = await prodResponse.json();
 
-          setResults((prev) => ({
-            ...prev,
-            products: {
-              status: 'success',
-              message: `Found ${prodData.length || 0} products`,
-              details: `Sample products: ${prodData.slice(0, 3).map((p: any) => p.title).join(', ')}`,
-            },
-          }));
+          if (!prodResponse.ok || !Array.isArray(prodData)) {
+            setResults((prev) => ({
+              ...prev,
+              products: {
+                status: 'error',
+                message: 'Failed to fetch products',
+                details: typeof prodData === 'object' ? JSON.stringify(prodData, null, 2) : String(prodData),
+              },
+            }));
+          } else {
+            setResults((prev) => ({
+              ...prev,
+              products: {
+                status: 'success',
+                message: `Found ${prodData.length || 0} products`,
+                details: prodData.length > 0
+                  ? `Sample products: ${prodData.slice(0, 3).map((p: any) => p.title).join(', ')}`
+                  : 'No products found in store',
+              },
+            }));
+          }
         } catch (error) {
           setResults((prev) => ({
             ...prev,
